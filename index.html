@@ -14,11 +14,6 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        /* Estilo de respaldo seguro para asegurar que el modal se muestre */
-        .modal-activo { display: flex !important; }
-    </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
 
@@ -30,7 +25,7 @@
                 <p class="text-xs text-indigo-200">Control de pagos y alertas</p>
             </div>
             <div>
-                <button type="button" onclick="abrirModalSeguro()" class="bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg transition active:scale-95 cursor-pointer">
+                <button type="button" onclick="abrirModalDefinitivo()" class="bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg transition active:scale-95 cursor-pointer">
                     <i class="fa-solid fa-plus mr-1"></i> Nuevo
                 </button>
             </div>
@@ -61,10 +56,10 @@
         <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h2 id="modalTitulo" class="text-lg font-bold text-slate-800">Agregar Crédito</h2>
-                <button type="button" onclick="cerrarModalSeguro()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold px-2">&times;</button>
+                <button type="button" onclick="cerrarModalDefinitivo()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold px-2 cursor-pointer">&times;</button>
             </div>
             
-            <form id="formCredito" onsubmit="guardarCreditoSeguro(event)" class="space-y-3">
+            <form id="formCredito" onsubmit="guardarCreditoDefinitivo(event)" class="space-y-3">
                 <input type="hidden" id="creditoId">
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Nombre del Crédito / Entidad</label>
@@ -111,13 +106,14 @@
         </div>
     </div>
 
-    <!-- Lógica JavaScript Segura -->
+    <!-- Lógica JavaScript -->
     <script>
-        let creditos = JSON.parse(localStorage.getItem('mis_creditos_v7')) || [];
+        let creditos = JSON.parse(localStorage.getItem('mis_creditos_v8')) || [];
 
-        function abrirModalSeguro(id = null) {
+        function abrirModalDefinitivo(id = null) {
             const modal = document.getElementById('modalCredito');
-            modal.classList.add('modal-activo');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
             
             if (id !== null) {
                 document.getElementById('modalTitulo').innerText = 'Editar Crédito';
@@ -140,12 +136,13 @@
             }
         }
 
-        function cerrarModalSeguro() {
+        function cerrarModalDefinitivo() {
             const modal = document.getElementById('modalCredito');
-            modal.classList.remove('modal-activo');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
         }
 
-        function guardarCreditoSeguro(e) {
+        function guardarCreditoDefinitivo(e) {
             e.preventDefault();
             const id = document.getElementById('creditoId').value;
             const nuevoCredito = {
@@ -171,15 +168,15 @@
                 creditos.push(nuevoCredito);
             }
 
-            localStorage.setItem('mis_creditos_v7', JSON.stringify(creditos));
-            cerrarModalSeguro();
+            localStorage.setItem('mis_creditos_v8', JSON.stringify(creditos));
+            cerrarModalDefinitivo();
             renderizarApp();
         }
 
         function eliminarCredito(id) {
             if (confirm('¿Estás seguro de eliminar este crédito?')) {
                 creditos = creditos.filter(c => c.id !== id);
-                localStorage.setItem('mis_creditos_v7', JSON.stringify(creditos));
+                localStorage.setItem('mis_creditos_v8', JSON.stringify(creditos));
                 renderizarApp();
             }
         }
@@ -188,7 +185,7 @@
             const cred = creditos.find(c => c.id === id);
             if(cred) {
                 cred.pagado = !cred.pagado;
-                localStorage.setItem('mis_creditos_v7', JSON.stringify(creditos));
+                localStorage.setItem('mis_creditos_v8', JSON.stringify(creditos));
                 renderizarApp();
             }
         }
@@ -274,7 +271,12 @@
                             <span class="text-slate-500">Monto Total Deuda: <b class="text-slate-700">$${c.montoTotal.toLocaleString()}</b></span>
                             <span class="text-indigo-600 font-semibold">Cuota ${c.cuotaActual \vert{}\vert{} '-'} de${c.cuotasTotales || '-'}</span>
                         </div>
-                        ` : ''}
+                        ` : `
+                        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex justify-between items-center text-xs">
+                            <span class="text-slate-500">Progreso:</span>
+                            <span class="text-indigo-600 font-semibold">Cuota ${c.cuotaActual \vert{}\vert{} '-'} de${c.cuotasTotales || '-'}</span>
+                        </div>
+                        `}
 
                         <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-xs text-slate-500">
                             <span>Acciones</span>
@@ -282,7 +284,7 @@
                                 <button type="button" onclick="togglePagado(${c.id})" class="px-3 py-1.5 rounded-lg font-medium text-xs transition ${c.pagado ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'} cursor-pointer">
                                     <i class="fa-solid ${c.pagado ? 'fa-rotate-left' : 'fa-check'} mr-1"></i> ${c.pagado ? 'Desmarcar' : 'Marcar Pagado'}
                                 </button>
-                                <button type="button" onclick="abrirModalSeguro(${c.id})" class="text-slate-400 hover:text-indigo-600 p-1.5 cursor-pointer"><i class="fa-solid fa-pen"></i></button>
+                                <button type="button" onclick="abrirModalDefinitivo(${c.id})" class="text-slate-400 hover:text-indigo-600 p-1.5 cursor-pointer"><i class="fa-solid fa-pen"></i></button>
                                 <button type="button" onclick="eliminarCredito(${c.id})" class="text-slate-400 hover:text-rose-600 p-1.5 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
